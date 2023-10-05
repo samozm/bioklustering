@@ -35,6 +35,7 @@ dat$pred10dis0 = tmpdat$label
 dat$pred10dis0.x1 = tmpdat$dimension1
 dat$pred10dis0.x2 = tmpdat$dimension2
 
+
 ## --------------------------------------------
 ## 50 percent labels observed (discretize)
 ## --------------------------------------------
@@ -160,6 +161,7 @@ p5 = ggplot(dat,aes(x=predunsup.x1, y=predunsup.x2, color=as.factor(pred.unsup),
     legend.position="none"
   )+
   scale_color_manual(values=c("#56B4E9", "#009E73"))
+
 p
 p2
 p3
@@ -347,6 +349,18 @@ dat$pred10.0 = tmpdat$Labels
 dat$pred10.0.x1 = tmpdat2$principal.Component.1
 dat$pred10.0.x2 = tmpdat2$Principal.Component.2
 
+tmpdat = read.table("../scripts/gmm/predictions_10%_only0s_pre_bestModel.csv", header=TRUE, sep=",")
+str(tmpdat)
+tmpdat2 = read.table("../scripts/gmm/pca_10%_only0_pre.csv", header=TRUE, sep=",")
+str(tmpdat2)
+dat$pred10.0.pre = tmpdat$Labels
+dat$pred10.0.pre.x1 = tmpdat2$principal.Component.1
+dat$pred10.0.pre.x2 = tmpdat2$Principal.Component.2
+
+tmpdat3 = read.table("../datasets/labels_ten_percent_only0s.csv", header=TRUE, sep=",")
+tmpdat3
+dat$labs10.0.given = tmpdat3$Labels
+
 
 tmpdat = read.table("../scripts/gmm/predictions_50%_bestModel.csv", header=TRUE, sep=",")
 str(tmpdat)
@@ -432,10 +446,41 @@ p3 = ggplot(dat,aes(x=pred50.x1, y=pred50.x2, color=as.factor(pred50),shape=as.f
   )+
   scale_color_manual(values=c("#56B4E9", "#009E73"))
 
+p4 = ggplot(dat,aes(x=pred10.0.pre.x1, y=pred10.0.pre.x2, color=as.factor(pred10.0.pre),shape=as.factor(target)))+geom_point(cex=4, alpha=0.65)+
+   xlab("PC1") + ylab(" ")+ ggtitle("GMM 10% labels (only 0's) - Pre-Processing")+
+   theme(
+    plot.title = element_text(hjust=0.5, size=rel(1.6)),
+    axis.title.x = element_text(size=rel(1.4)),
+    axis.title.y = element_text(size=rel(1.4), angle=90, vjust=0.5, hjust=0.5),
+    axis.text.x = element_text(colour="grey", size=rel(1.2), angle=0, hjust=.5, vjust=.5, face="plain"),
+    axis.text.y = element_text(colour="grey", size=rel(1.2), angle=0, hjust=.5, vjust=.5, face="plain"),
+    legend.text=element_text(size=rel(1.2)), legend.title=element_text(size=rel(1.5)),
+    panel.background = element_blank(),
+    axis.line = element_line(colour = "grey"),
+    legend.position="none"
+  )+
+  scale_color_manual(values=c("#56B4E9", "#009E73"))
+
+p5 = ggplot(dat[dat$labs10.0.given == 0,],aes(x=pred10.0.pre.x1, y=pred10.0.pre.x2, color=as.factor(pred10.0.pre),shape=as.factor(target)))+geom_point(cex=4, alpha=0.65)+
+   xlab("PC1") + ylab(" ")+ ggtitle("GMM 10% labels (only 0's) - Pre-Processing")+
+   theme(
+    plot.title = element_text(hjust=0.5, size=rel(1.6)),
+    axis.title.x = element_text(size=rel(1.4)),
+    axis.title.y = element_text(size=rel(1.4), angle=90, vjust=0.5, hjust=0.5),
+    axis.text.x = element_text(colour="grey", size=rel(1.2), angle=0, hjust=.5, vjust=.5, face="plain"),
+    axis.text.y = element_text(colour="grey", size=rel(1.2), angle=0, hjust=.5, vjust=.5, face="plain"),
+    legend.text=element_text(size=rel(1.2)), legend.title=element_text(size=rel(1.5)),
+    panel.background = element_blank(),
+    axis.line = element_line(colour = "grey"),
+    legend.position="none"
+  )+
+  scale_color_manual(values=c("#56B4E9", "#009E73"))
+
 p
 p2
 p2.0
 p3
+p4
 
 ## Saving plots
 pdf("gmm-0.pdf",width=5,height=5)
@@ -452,6 +497,14 @@ dev.off()
 
 pdf("gmm-50.pdf",width=5,height=5)
 p3
+dev.off()
+
+pdf("gmm-10-0-pre.pdf",width=5,height=5)
+p4
+dev.off()
+
+pdf("gmm-10-0-pre-only-labeled.pdf",width=5,height=5)
+p5
 dev.off()
 ```
 
