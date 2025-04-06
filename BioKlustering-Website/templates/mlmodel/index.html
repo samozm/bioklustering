@@ -99,11 +99,21 @@
                 {{ upload_form.labelpath}}
             </div>
         </div>
-        <div class="row mt-2">
-            <div class="col-md-8">
+        <div class="row mt-2 justify-content-left">
+            <div class="col-md-5">
                 <button id="file_upload_btn" type="submit" value="upload_form" name="upload_file"
                     class="btn btn-secondary mt-3 float-right mr-3 mr-md-0">Upload All</button>
             </div>
+        </div>
+    </form>
+
+    <form id="exampleinfoform" method="POST">
+        {% csrf_token %}
+        <div class="col-md-3 ml-0">
+            <input type="hidden" name="preselected_file" value="example_file" >
+            <!-- Button to load example dataset -->
+            <button id="file_upload_example_btn" type="submit" name="upload_example_file"
+                class="btn btn-secondary mt-3 float-left mr-3 mr-md-0">Upload Example Dataset</button>
         </div>
     </form>
 

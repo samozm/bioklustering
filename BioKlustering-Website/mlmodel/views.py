@@ -3,6 +3,7 @@
 # This file is part of the BioKlustering Website.
 
 import os
+import shutil
 import pandas as pd
 import json
 import time
@@ -11,6 +12,7 @@ from .models import FileInfo, FileListInfo
 from django import forms
 from django.core.mail import send_mail, EmailMessage
 from django.core.files.storage import FileSystemStorage
+from django.core.files.base import File
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.views.generic.edit import FormView
@@ -19,7 +21,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate, login
 from django.core.validators import MinValueValidator
 from datetime import datetime, timezone
-from mlmodel.forms import MyNumberInput, MySelect, FileInfoForm, FileListInfoForm, PredictInfoForm, ParametersInfoForm
+from mlmodel.forms import MyNumberInput, MySelect, FileInfoForm, FileListInfoForm, PredictInfoForm, ParametersInfoForm, ExampleFileInfoForm
 from mlmodel.parser import kmeans, GMM, spectralClustering
 from mlmodel.models import PredictInfo
 from .parser.helpers import read_csv_labels
@@ -58,6 +60,7 @@ class PredictionView(FormView):
     # Dispaly the home page
     def get(self, request, *args, **kwargs):
         if self.request.user.is_authenticated:
+            example_form = FileInfoForm(prefix="example_form")
             upload_form = FileInfoForm(prefix="upload_form")
             filelist_last = FileListInfo.objects.filter(user=self.request.user).last()
             filelist = getattr(filelist_last, 'filelist', None)
@@ -79,6 +82,7 @@ class PredictionView(FormView):
             parameters_form = self.get_parameters_form(predict_info.mlmodels, predict_info_param_dict)
 
             return render(self.request, self.path, {
+                'example_form': example_form,
                 'upload_form': upload_form,
                 'filelist_form': filelist_form,
                 'filelist': FileListInfo.objects.filter(user=self.request.user).last(),
@@ -86,6 +90,7 @@ class PredictionView(FormView):
                 'parameters_form': parameters_form,
             })
         else:
+            example_form = FileInfoForm(prefix="example_form")
             upload_form = FileInfoForm(prefix="upload_form")
             filelist_last = FileListInfo.objects.last()
             filelist_form = FileListInfoForm(prefix="filelist_form")
@@ -101,6 +106,7 @@ class PredictionView(FormView):
             parameters_form = self.get_parameters_form(predict_info.mlmodels, getattr(predict_info, "content", {}))
 
             return render(self.request, self.path, {
+                'example_form': example_form,
                 'upload_form': upload_form,
                 'filelist_form': filelist_form,
                 'filelist': FileListInfo.objects.last(),
@@ -123,12 +129,35 @@ class PredictionView(FormView):
             upload_form_isalid = upload_form.is_valid()
             filelist_form_isvalid = filelist_form.is_valid()
             predict_form_isvalid = predict_form.is_valid()
+            
+            example_form = ExampleFileInfoForm(self.request.POST, files=self.request.FILES, prefix="preselected_file")
+            
+            # example upload
+            if 'preselected_file' in request.POST and not upload_form_isalid and not predict_form_isvalid and not filelist_form_isvalid:
+                #fileval = open(os.path.join("media","examplefiles","combined_Bat_Cat_flu.fa"), "r")
+                filesrc = os.path.join("media","examplefiles","combined_Bat_Cat_flu.fa")
+                filepath = os.path.join("media","userfiles","combined_Bat_Cat_flu.fa")
+                #self.handle_uploaded_file(fileval,filepath)
+                #fileval = open(os.path.join("media","examplefiles","labels_ten_percent.csv"), "r")
+                labelsrc = os.path.join("media","examplefiles","labels_ten_percent.csv")
+                labelpath = os.path.join("media","userfiles","batcat_labels_ten_percent.csv")
+                #self.handle_uploaded_file(fileval,filepath)
+                shutil.copyfile(filesrc,filepath)
+                shutil.copyfile(labelsrc,labelpath)
+                example_form2 = example_form.save(commit=False)
+                example_form2.files = FileInfo()
+                example_form2.filepath = File(open(filepath),"combined_Bat_Cat_flu.fa")
+                example_form2.labelpath = File(open(labelpath),"batcat_labels_ten_percent.csv")
+                example_form2.user = self.request.user
+                example_form2.save()
+                print(example_form2)
 
             # upload a file
-            if upload_form_isalid and not predict_form_isvalid and not filelist_form_isvalid:
+            elif upload_form_isalid and not predict_form_isvalid and not filelist_form_isvalid:
                 upload_form2 = upload_form.save(commit=False)
                 upload_form2.user = self.request.user
                 upload_form2.save()
+                print(upload_form2)
                 #  process the uploaded file before writing it to database
                 fileval = upload_form['filepath'].value()  # actual file
                 filepath = os.path.join("media", "userfiles", fileval.name)
@@ -198,6 +227,7 @@ class PredictionView(FormView):
                         return redirect('result')
 
                 return render(self.request, self.path, {
+                    'example_form': example_form,
                     'upload_form': upload_form,
                     'filelist_form': filelist_form,
                     'filelist': FileListInfo.objects.filter(user=self.request.user).last(),

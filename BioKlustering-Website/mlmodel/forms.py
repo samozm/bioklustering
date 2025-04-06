@@ -25,6 +25,15 @@ class FileInfoForm(forms.ModelForm):
     class Meta:
         model = FileInfo
         fields = ('filepath', 'labelpath')
+        
+class ExampleFileInfoForm(forms.ModelForm):
+    filepath = forms.FileField(required=False, widget=MyClearableFileInput2(attrs={'labelName': 'Choose a sequence file (.fasta)'}))
+    labelpath = forms.FileField(required=False, widget=MyClearableFileInput3(attrs={'labelName': 'Choose a label file (.csv)'}))
+
+    class Meta:
+        model = FileInfo
+        fields = ('filepath', 'labelpath')
+        
 
 class MyCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
     template_name = os.path.join('widgets', 'checkbox_select_filelist.html')
